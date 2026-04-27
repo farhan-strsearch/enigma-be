@@ -8,9 +8,10 @@ from app.core.database import Base
 
 class OpexByBedrooms(Base):
     __tablename__ = "opex_by_bedrooms"
+    __table_args__ = {"schema": "markets"}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    market: Mapped[int | None] = mapped_column(Integer, ForeignKey("market_keys_master.id"))
+    market: Mapped[int | None] = mapped_column(Integer, ForeignKey("markets.market_keys_master.id"))
     bedrooms: Mapped[int | None] = mapped_column(Integer)
     pool_hot_tub_low: Mapped[Decimal | None] = mapped_column(Numeric)
     pool_hot_tub_high: Mapped[Decimal | None] = mapped_column(Numeric)
@@ -32,9 +33,10 @@ class OpexByBedrooms(Base):
 
 class OpexBySize(Base):
     __tablename__ = "opex_by_size"
+    __table_args__ = {"schema": "markets"}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    market: Mapped[int | None] = mapped_column(Integer, ForeignKey("market_keys_master.id"))
+    market: Mapped[int | None] = mapped_column(Integer, ForeignKey("markets.market_keys_master.id"))
     sqft: Mapped[int | None] = mapped_column(Integer)
     internet: Mapped[Decimal | None] = mapped_column(Numeric)
     pest_control: Mapped[Decimal | None] = mapped_column(Numeric)

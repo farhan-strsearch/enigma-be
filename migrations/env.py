@@ -1,24 +1,36 @@
 import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy.ext.asyncio import async_engine_from_config
-from sqlalchemy import pool
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import pool, text
 
 from alembic import context
 
-from app.core.config import settings
+from app.core.config import get_config
 from app.core.database import Base
-import app.models.market  # noqa: F401
-import app.models.opex  # noqa: F401
-import app.models.construction  # noqa: F401
+import app.models  # noqa: F401
+
+TARGET_SCHEMA = "markets"
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.async_database_url)
+config.set_main_option("sqlalchemy.url", get_config().async_database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
+
+def include_name(name, type_, parent_names):
+    if type_ == "schema":
+        return name == TARGET_SCHEMA
+    return True
+
+
+def include_object(object, name, type_, reflected, compare_to):
+    if type_ == "table":
+        return object.schema == TARGET_SCHEMA
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -28,25 +40,37 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_schemas=True,
+        include_name=include_name,
+        include_object=include_object,
+        version_table_schema=TARGET_SCHEMA,
     )
     with context.begin_transaction():
         context.run_migrations()
 
 
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {TARGET_SCHEMA}"))
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_schemas=True,
+        include_name=include_name,
+        include_object=include_object,
+        version_table_schema=TARGET_SCHEMA,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_async_migrations() -> None:
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
+    connectable = create_async_engine(
+        get_config().async_database_url,
         poolclass=pool.NullPool,
     )
     async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+        async with connection.begin():
+            await connection.run_sync(do_run_migrations)
     await connectable.dispose()
 
 

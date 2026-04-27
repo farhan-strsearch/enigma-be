@@ -17,9 +17,7 @@ class Config(BaseSettings):
     @property
     def async_database_url(self) -> str:
         url = self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-        if self.is_production:
-            return f"{url}?ssl=true"
-        return url
+        return f"{url}?ssl=require"
 
 
 @lru_cache(maxsize=1)

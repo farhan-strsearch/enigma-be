@@ -6,6 +6,7 @@ from app.core.database import Base
 
 class MarketKeysMaster(Base):
     __tablename__ = "market_keys_master"
+    __table_args__ = {"schema": "markets"}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     market_slug: Mapped[str | None] = mapped_column(String)
