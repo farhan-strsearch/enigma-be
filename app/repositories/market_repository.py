@@ -23,6 +23,16 @@ class MarketRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_slug_map(self, market_ids: set[int]) -> dict[int, str]:
+        if not market_ids:
+            return {}
+        result = await self.db.execute(
+            select(MarketKeysMaster.id, MarketKeysMaster.market_slug).where(
+                MarketKeysMaster.id.in_(market_ids)
+            )
+        )
+        return {row.id: row.market_slug for row in result}
+
     async def create(self, data: dict) -> MarketKeysMaster:
         market = MarketKeysMaster(**data)
         self.db.add(market)
