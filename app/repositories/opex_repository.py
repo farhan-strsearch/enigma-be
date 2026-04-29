@@ -26,7 +26,7 @@ class OpexByBedroomsRepository:
     ) -> tuple[list[OpexByBedrooms], int, int]:
         query = select(OpexByBedrooms)
         if market_id is not None:
-            query = query.where(OpexByBedrooms.market == market_id)
+            query = query.where(OpexByBedrooms.market_id == market_id)
         if bedrooms is not None:
             query = query.where(OpexByBedrooms.bedrooms == bedrooms)
 
@@ -41,8 +41,24 @@ class OpexByBedroomsRepository:
             .limit(page_size)
         )
         items = list(result.scalars().all())
-        logger.debug("opex.bedrooms.get_paginated", page=page, page_size=page_size, market_id=market_id, bedrooms=bedrooms, total=total)
+        logger.debug(
+            "opex.bedrooms.get_paginated",
+            page=page,
+            page_size=page_size,
+            market_id=market_id,
+            bedrooms=bedrooms,
+            total=total,
+        )
         return items, total, pages
+
+    async def get_by_market_and_bedrooms(self, market_id: int, bedrooms: int) -> OpexByBedrooms | None:
+        result = await self.db.execute(
+            select(OpexByBedrooms).where(
+                OpexByBedrooms.market_id == market_id,
+                OpexByBedrooms.bedrooms == bedrooms,
+            )
+        )
+        return result.scalar_one_or_none()
 
     async def create(self, data: dict) -> OpexByBedrooms:
         record = OpexByBedrooms(**data)
@@ -89,7 +105,7 @@ class OpexBySizeRepository:
     ) -> tuple[list[OpexBySize], int, int]:
         query = select(OpexBySize)
         if market_id is not None:
-            query = query.where(OpexBySize.market == market_id)
+            query = query.where(OpexBySize.market_id == market_id)
         if sqft is not None:
             query = query.where(OpexBySize.sqft == sqft)
 
@@ -104,8 +120,24 @@ class OpexBySizeRepository:
             .limit(page_size)
         )
         items = list(result.scalars().all())
-        logger.debug("opex.size.get_paginated", page=page, page_size=page_size, market_id=market_id, sqft=sqft, total=total)
+        logger.debug(
+            "opex.size.get_paginated",
+            page=page,
+            page_size=page_size,
+            market_id=market_id,
+            sqft=sqft,
+            total=total,
+        )
         return items, total, pages
+
+    async def get_by_market_and_sqft(self, market_id: int, sqft: int) -> OpexBySize | None:
+        result = await self.db.execute(
+            select(OpexBySize).where(
+                OpexBySize.market_id == market_id,
+                OpexBySize.sqft == sqft,
+            )
+        )
+        return result.scalar_one_or_none()
 
     async def create(self, data: dict) -> OpexBySize:
         record = OpexBySize(**data)

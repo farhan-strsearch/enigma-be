@@ -26,8 +26,8 @@ class OpexByBedroomsService:
 
     async def _with_slug(self, record: OpexByBedrooms, slug_map: dict[int, str]) -> OpexByBedroomsSchema:
         schema = OpexByBedroomsSchema.model_validate(record)
-        if record.market is not None:
-            schema = schema.model_copy(update={"market_slug": slug_map.get(record.market)})
+        if record.market_id is not None:
+            schema = schema.model_copy(update={"market_slug": slug_map.get(record.market_id)})
         return schema
 
     async def get_by_id(self, record_id: int) -> OpexByBedroomsSchema | None:
@@ -35,8 +35,23 @@ class OpexByBedroomsService:
         if record is None:
             return None
         slug_map = await self.market_repo.get_slug_map(
-            {record.market} if record.market is not None else set()
+            {record.market_id} if record.market_id is not None else set()
         )
+        return await self._with_slug(record, slug_map)
+
+    async def get_by_market_and_bedrooms(
+        self,
+        bedrooms: int,
+        market_id: int | None = None,
+        market_slug: str | None = None,
+    ) -> OpexByBedroomsSchema | None:
+        resolved_market_id = await self._resolve_market_id(market_id, market_slug)
+        if resolved_market_id is None:
+            return None
+        record = await self.repository.get_by_market_and_bedrooms(resolved_market_id, bedrooms)
+        if record is None:
+            return None
+        slug_map = await self.market_repo.get_slug_map({resolved_market_id})
         return await self._with_slug(record, slug_map)
 
     async def get_paginated(
@@ -55,17 +70,17 @@ class OpexByBedroomsService:
             bedrooms=bedrooms,
         )
         slug_map = await self.market_repo.get_slug_map(
-            {item.market for item in items if item.market is not None}
+            {item.market_id for item in items if item.market_id is not None}
         )
         return [await self._with_slug(item, slug_map) for item in items], total, pages
 
     async def create(self, data: OpexByBedroomsCreateSchema) -> OpexByBedroomsSchema:
         market = await self._resolve_market_id(data.market_id, data.market_slug)
         payload = data.model_dump(exclude={"market_id", "market_slug"})
-        payload["market"] = market
+        payload["market_id"] = market
         record = await self.repository.create(payload)
         slug_map = await self.market_repo.get_slug_map(
-            {record.market} if record.market is not None else set()
+            {record.market_id} if record.market_id is not None else set()
         )
         return await self._with_slug(record, slug_map)
 
@@ -73,12 +88,12 @@ class OpexByBedroomsService:
         market = await self._resolve_market_id(data.market_id, data.market_slug)
         payload = data.model_dump(exclude={"market_id", "market_slug"}, exclude_unset=True)
         if market is not None or data.market_id is not None or data.market_slug is not None:
-            payload["market"] = market
+            payload["market_id"] = market
         record = await self.repository.update(record_id, payload)
         if record is None:
             return None
         slug_map = await self.market_repo.get_slug_map(
-            {record.market} if record.market is not None else set()
+            {record.market_id} if record.market_id is not None else set()
         )
         return await self._with_slug(record, slug_map)
 
@@ -101,8 +116,8 @@ class OpexBySizeService:
 
     async def _with_slug(self, record: OpexBySize, slug_map: dict[int, str]) -> OpexBySizeSchema:
         schema = OpexBySizeSchema.model_validate(record)
-        if record.market is not None:
-            schema = schema.model_copy(update={"market_slug": slug_map.get(record.market)})
+        if record.market_id is not None:
+            schema = schema.model_copy(update={"market_slug": slug_map.get(record.market_id)})
         return schema
 
     async def get_by_id(self, record_id: int) -> OpexBySizeSchema | None:
@@ -110,8 +125,23 @@ class OpexBySizeService:
         if record is None:
             return None
         slug_map = await self.market_repo.get_slug_map(
-            {record.market} if record.market is not None else set()
+            {record.market_id} if record.market_id is not None else set()
         )
+        return await self._with_slug(record, slug_map)
+
+    async def get_by_market_and_sqft(
+        self,
+        sqft: int,
+        market_id: int | None = None,
+        market_slug: str | None = None,
+    ) -> OpexBySizeSchema | None:
+        resolved_market_id = await self._resolve_market_id(market_id, market_slug)
+        if resolved_market_id is None:
+            return None
+        record = await self.repository.get_by_market_and_sqft(resolved_market_id, sqft)
+        if record is None:
+            return None
+        slug_map = await self.market_repo.get_slug_map({resolved_market_id})
         return await self._with_slug(record, slug_map)
 
     async def get_paginated(
@@ -130,17 +160,17 @@ class OpexBySizeService:
             sqft=sqft,
         )
         slug_map = await self.market_repo.get_slug_map(
-            {item.market for item in items if item.market is not None}
+            {item.market_id for item in items if item.market_id is not None}
         )
         return [await self._with_slug(item, slug_map) for item in items], total, pages
 
     async def create(self, data: OpexBySizeCreateSchema) -> OpexBySizeSchema:
         market = await self._resolve_market_id(data.market_id, data.market_slug)
         payload = data.model_dump(exclude={"market_id", "market_slug"})
-        payload["market"] = market
+        payload["market_id"] = market
         record = await self.repository.create(payload)
         slug_map = await self.market_repo.get_slug_map(
-            {record.market} if record.market is not None else set()
+            {record.market_id} if record.market_id is not None else set()
         )
         return await self._with_slug(record, slug_map)
 
@@ -148,12 +178,12 @@ class OpexBySizeService:
         market = await self._resolve_market_id(data.market_id, data.market_slug)
         payload = data.model_dump(exclude={"market_id", "market_slug"}, exclude_unset=True)
         if market is not None or data.market_id is not None or data.market_slug is not None:
-            payload["market"] = market
+            payload["market_id"] = market
         record = await self.repository.update(record_id, payload)
         if record is None:
             return None
         slug_map = await self.market_repo.get_slug_map(
-            {record.market} if record.market is not None else set()
+            {record.market_id} if record.market_id is not None else set()
         )
         return await self._with_slug(record, slug_map)
 

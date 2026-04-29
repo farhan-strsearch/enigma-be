@@ -7,7 +7,7 @@ from app.schemas.common import BaseResponse
 
 class OpexByBedroomsSchema(BaseResponse):
     id: int
-    market: int | None = None
+    market_id: int | None = None
     market_slug: str | None = None
     bedrooms: int | None = None
     pool_hot_tub_low: Decimal | None = None
@@ -86,7 +86,7 @@ class OpexByBedroomsUpdateSchema(BaseModel):
 
 class OpexBySizeSchema(BaseResponse):
     id: int
-    market: int | None = None
+    market_id: int | None = None
     market_slug: str | None = None
     sqft: int | None = None
     internet: Decimal | None = None

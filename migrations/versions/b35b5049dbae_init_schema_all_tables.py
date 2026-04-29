@@ -57,7 +57,7 @@ def upgrade() -> None:
     )
     op.create_table('opex_by_bedrooms',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('market', sa.Integer(), nullable=True),
+    sa.Column('market_id', sa.Integer(), nullable=True),
     sa.Column('bedrooms', sa.Integer(), nullable=True),
     sa.Column('pool_hot_tub_low', sa.Numeric(), nullable=True),
     sa.Column('pool_hot_tub_high', sa.Numeric(), nullable=True),
@@ -75,18 +75,19 @@ def upgrade() -> None:
     sa.Column('furnishings_low', sa.Numeric(), nullable=True),
     sa.Column('furnishings_high', sa.Numeric(), nullable=True),
     sa.Column('consolidated_shipping', sa.Numeric(), nullable=True),
-    sa.ForeignKeyConstraint(['market'], ['markets.market_keys_master.id'], ),
+    sa.ForeignKeyConstraint(['market_id'], ['markets.market_keys_master.id'], ),
     sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('market_id','bedrooms', name='uq_opex_by_bedrooms_market_bedrooms'),
     schema='markets'
     )
     op.create_table('opex_by_size',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
-    sa.Column('market', sa.Integer(), nullable=True),
+    sa.Column('market_id', sa.Integer(), nullable=True),
     sa.Column('sqft', sa.Integer(), nullable=True),
     sa.Column('internet', sa.Numeric(), nullable=True),
     sa.Column('pest_control', sa.Numeric(), nullable=True),
     sa.Column('utilities', sa.Numeric(), nullable=True),
-    sa.ForeignKeyConstraint(['market'], ['markets.market_keys_master.id'], ),
+    sa.ForeignKeyConstraint(['market_id'], ['markets.market_keys_master.id'], ),
     sa.PrimaryKeyConstraint('id'),
     schema='markets'
     )
