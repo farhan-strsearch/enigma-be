@@ -24,6 +24,9 @@ class AutomatedDealUnderwritingService:
         market_id: int | None = None,
         market_slug: str | None = None,
     ) -> dict:
+        if market_id is not None and market_slug is not None:
+            raise ValueError("Provide either market_id or market_slug, not both")
+
         opex_by_bedrooms = await self.opex_by_bedrooms_service.get_by_market_and_bedrooms(
             bedrooms=bedrooms,
             market_id=market_id,

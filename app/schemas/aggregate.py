@@ -8,7 +8,7 @@ class UnderwritingQuerySchema(BaseModel):
     market_slug: str | None = None
 
     @model_validator(mode="after")
-    def market_slug_takes_precedence(self):
+    def check_market_fields(self):
         if self.market_id is not None and self.market_slug is not None:
-            self.market_id = None
+            raise ValueError("Provide either market_id or market_slug, not both")
         return self

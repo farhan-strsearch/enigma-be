@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.controllers.aggregate_controller import AutomatedDealUnderwritingController
@@ -9,7 +9,6 @@ from app.repositories.construction_repository import (
 )
 from app.repositories.market_repository import MarketRepository
 from app.repositories.opex_repository import OpexByBedroomsRepository, OpexBySizeRepository
-from app.schemas.aggregate import UnderwritingQuerySchema
 from app.services.aggregate_service import AutomatedDealUnderwritingService
 from app.services.construction_service import ConstructionAmenitiesService, ConstructionRemodelingService
 from app.services.opex_service import OpexByBedroomsService, OpexBySizeService
@@ -30,12 +29,15 @@ def get_underwriting_controller(db: AsyncSession = Depends(get_db)) -> Automated
 
 @router.get("/")
 async def get_underwriting_data(
-    query: UnderwritingQuerySchema = Depends(),
+    bedrooms: int = Query(...),
+    sqft: int = Query(...),
+    market_id: int | None = Query(None),
+    market_slug: str | None = Query(None),
     controller: AutomatedDealUnderwritingController = Depends(get_underwriting_controller),
 ):
     return await controller.get_underwriting_data(
-        bedrooms=query.bedrooms,
-        sqft=query.sqft,
-        market_id=query.market_id,
-        market_slug=query.market_slug,
+        bedrooms=bedrooms,
+        sqft=sqft,
+        market_id=market_id,
+        market_slug=market_slug,
     )
