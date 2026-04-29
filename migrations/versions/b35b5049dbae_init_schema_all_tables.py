@@ -1,8 +1,8 @@
 """Init schema - all tables
 
-Revision ID: 65d8a054421b
+Revision ID: b35b5049dbae
 Revises: 
-Create Date: 2026-04-28 22:12:34.862369
+Create Date: 2026-04-29 15:26:05.162552
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '65d8a054421b'
+revision: str = 'b35b5049dbae'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -46,12 +46,13 @@ def upgrade() -> None:
     )
     op.create_table('market_keys_master',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('market_slug', sa.String(), nullable=True),
+    sa.Column('market_slug', sa.String(), nullable=False),
     sa.Column('market_name', sa.String(), nullable=True),
     sa.Column('market_name_current', sa.String(), nullable=True),
     sa.Column('market_status', sa.String(), nullable=True),
     sa.Column('analyst_owner', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('market_slug'),
     schema='markets'
     )
     op.create_table('opex_by_bedrooms',
