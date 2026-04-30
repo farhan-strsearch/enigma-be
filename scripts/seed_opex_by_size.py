@@ -1,48 +1,86 @@
 import asyncio
+import csv
+import json
 import sys
+from decimal import Decimal
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from sqlalchemy import select
 from app.core.database import AsyncSessionLocal
+from app.models.market import MarketKeysMaster
 from app.models.opex import OpexBySize
 
-OPEX_BY_SIZE = [
-    # Market 1 — Nashville
-    {"market_id":1, "sqft": 1000, "internet": 100, "pest_control": 60, "utilities": 400},
-    {"market_id":1, "sqft": 1500, "internet": 100, "pest_control": 60, "utilities": 500},
-    {"market_id":1, "sqft": 2000, "internet": 100, "pest_control": 60, "utilities": 600},
-    {"market_id":1, "sqft": 2750, "internet": 150, "pest_control": 75, "utilities": 700},
-    {"market_id":1, "sqft": 3500, "internet": 150, "pest_control": 75, "utilities": 800},
-    {"market_id":1, "sqft": 4500, "internet": 150, "pest_control": 75, "utilities": 900},
-    # Market 2 — Scottsdale
-    {"market_id":2, "sqft": 1000, "internet": 100, "pest_control": 60, "utilities": 425},
-    {"market_id":2, "sqft": 1500, "internet": 100, "pest_control": 60, "utilities": 525},
-    {"market_id":2, "sqft": 2000, "internet": 100, "pest_control": 60, "utilities": 600},
-    {"market_id":2, "sqft": 2750, "internet": 150, "pest_control": 75, "utilities": 675},
-    {"market_id":2, "sqft": 3500, "internet": 150, "pest_control": 75, "utilities": 750},
-    {"market_id":2, "sqft": 4500, "internet": 150, "pest_control": 75, "utilities": 850},
-    # Market 3 — Miami
-    {"market_id":3, "sqft": 1000, "internet": 100, "pest_control": 60, "utilities": 350},
-    {"market_id":3, "sqft": 1500, "internet": 100, "pest_control": 60, "utilities": 425},
-    {"market_id":3, "sqft": 2000, "internet": 100, "pest_control": 60, "utilities": 500},
-    {"market_id":3, "sqft": 2750, "internet": 150, "pest_control": 75, "utilities": 600},
-    {"market_id":3, "sqft": 3500, "internet": 150, "pest_control": 75, "utilities": 700},
-    {"market_id":3, "sqft": 4500, "internet": 150, "pest_control": 75, "utilities": 800},
-]
+DATA_DIR = Path(__file__).resolve().parent / "data"
+CSV_FILE = DATA_DIR / "f-opex_by_size.csv"
+SLUG_MAP_FILE = DATA_DIR / "slug_mapping.json"
+
+
+def _decimal(val: str) -> Decimal | None:
+    v = val.strip()
+    return Decimal(v) if v else None
+
+
+def load_rows():
+    with open(SLUG_MAP_FILE, encoding="utf-8") as f:
+        slug_map: dict[str, str] = json.load(f)
+
+    rows = []
+    with open(CSV_FILE, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        reader.fieldnames = [h.strip() for h in reader.fieldnames]
+        for row in reader:
+            market_name = row["Market"].strip()
+            slug = slug_map.get(market_name)
+            if not slug:
+                print(
+                    f"  WARNING: no slug mapping for market '{market_name}' — skipping row"
+                )
+                continue
+
+            rows.append(
+                {
+                    "_slug": slug,
+                    "sqft": int(row["SQFT"].strip()) if row["SQFT"].strip() else None,
+                    "internet": _decimal(row["Internet"]),
+                    "pest_control": _decimal(row["Pest Control"]),
+                    "utilities": _decimal(row["Utilities"]),
+                }
+            )
+    return rows
 
 
 async def seed():
+    rows = load_rows()
+    if not rows:
+        print("No rows loaded from CSV.")
+        return
+
     async with AsyncSessionLocal() as session:
+        markets = (await session.execute(select(MarketKeysMaster))).scalars().all()
+        slug_to_id = {m.market_slug: m.id for m in markets}
+
+        missing_slugs = {r["_slug"] for r in rows if r["_slug"] not in slug_to_id}
+        if missing_slugs:
+            for slug in sorted(missing_slugs):
+                print(
+                    f"  WARNING: slug '{slug}' not found in market_keys_master — rows for this market will be skipped"
+                )
+
         existing = (await session.execute(select(OpexBySize))).scalars().all()
         existing_keys = {(r.market_id, r.sqft) for r in existing}
 
-        to_insert = [
-            OpexBySize(**row)
-            for row in OPEX_BY_SIZE
-            if (row["market_id"], row["sqft"]) not in existing_keys
-        ]
+        to_insert = []
+        for row in rows:
+            market_id = slug_to_id.get(row["_slug"])
+            if market_id is None:
+                continue
+            if (market_id, row["sqft"]) in existing_keys:
+                continue
+            data = {k: v for k, v in row.items() if k != "_slug"}
+            data["market_id"] = market_id
+            to_insert.append(OpexBySize(**data))
 
         if not to_insert:
             print("Nothing to seed — all opex_by_size records already exist.")

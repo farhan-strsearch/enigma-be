@@ -1,4 +1,5 @@
 import asyncio
+import csv
 import sys
 from pathlib import Path
 
@@ -8,40 +9,37 @@ from sqlalchemy import select
 from app.core.database import AsyncSessionLocal
 from app.models.market import MarketKeysMaster
 
-MARKETS = [
-    {
-        "market_slug": "nashville-tn",
-        "market_name": "Nashville, TN",
-        "market_name_current": "Nashville",
-        "market_status": "active",
-        "analyst_owner": "",
-    },
-    {
-        "market_slug": "scottsdale-az",
-        "market_name": "Scottsdale, AZ",
-        "market_name_current": "Scottsdale",
-        "market_status": "active",
-        "analyst_owner": "",
-    },
-    {
-        "market_slug": "miami-fl",
-        "market_name": "Miami, FL",
-        "market_name_current": "Miami",
-        "market_status": "active",
-        "analyst_owner": "",
-    },
-]
+DATA_FILE = Path(__file__).resolve().parent / "data" / "f-markets.csv"
+
+
+def load_markets():
+    markets = []
+    with open(DATA_FILE, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            markets.append(
+                {
+                    "market_slug": row["market_slug"].strip() or None,
+                    "market_name": row["Market (New)"].strip() or None,
+                    "market_name_current": row["Market (Current)"].strip() or None,
+                    "market_status": row["Market_Status"].strip() or None,
+                    "analyst_owner": row["Analyst_Owner"].strip() or None,
+                }
+            )
+    return markets
 
 
 async def seed():
+    markets = load_markets()
+
     async with AsyncSessionLocal() as session:
         existing = (await session.execute(select(MarketKeysMaster))).scalars().all()
         existing_slugs = {m.market_slug for m in existing}
 
         to_insert = [
             MarketKeysMaster(**m)
-            for m in MARKETS
-            if m["market_slug"] not in existing_slugs
+            for m in markets
+            if m["market_slug"] and m["market_slug"] not in existing_slugs
         ]
 
         if not to_insert:
