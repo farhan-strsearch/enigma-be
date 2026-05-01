@@ -13,10 +13,10 @@ _FRED_URL = (
 
 class ExternalApiService:
     def __init__(self):
-        self.api_key = get_config().FRED_API_KEY
+        self.fred_api_key = get_config().FRED_API_KEY
 
     async def get_30y_fixed_rate(self) -> MortgageRateResponse | None:
-        url = f"{_FRED_URL}&api_key={self.api_key}"
+        url = f"{_FRED_URL}&api_key={self.fred_api_key}"
 
         for attempt in range(3):
             try:
@@ -26,7 +26,9 @@ class ExternalApiService:
                     for obs in response.json().get("observations", []):
                         v = obs.get("value", "")
                         if v and v != ".":
-                            return MortgageRateResponse(value=float(v), date=obs["date"])
+                            return MortgageRateResponse(
+                                value=float(v), date=obs["date"]
+                            )
             except Exception:
                 pass
             await asyncio.sleep(0.4 + attempt * 0.4)
