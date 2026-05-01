@@ -9,6 +9,7 @@ class Config(BaseSettings):
     APP_ENV: str = "development"
     DATABASE_URL: str
     CORS_ORIGINS: str = "*"
+    FRED_API_KEY: str = ""
 
     @property
     def is_production(self) -> bool:
