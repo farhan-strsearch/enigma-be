@@ -18,7 +18,7 @@ class OpexByBedroomsSchema(BaseResponse):
     supplies: Decimal | None = None
     capex_reserve: Decimal | None = None
     cleaning_fee: Decimal | None = None
-    num_of_turns: int | None = None
+    num_of_turns: Decimal | None = None
     property_taxes: Decimal | None = None
     land_value: Decimal | None = None
     appreciation: Decimal | None = None
@@ -40,7 +40,7 @@ class OpexByBedroomsCreateSchema(BaseModel):
     supplies: Decimal | None = None
     capex_reserve: Decimal | None = None
     cleaning_fee: Decimal | None = None
-    num_of_turns: int | None = None
+    num_of_turns: Decimal | None = None
     property_taxes: Decimal | None = None
     land_value: Decimal | None = None
     appreciation: Decimal | None = None
@@ -68,7 +68,7 @@ class OpexByBedroomsUpdateSchema(BaseModel):
     supplies: Decimal | None = None
     capex_reserve: Decimal | None = None
     cleaning_fee: Decimal | None = None
-    num_of_turns: int | None = None
+    num_of_turns: Decimal | None = None
     property_taxes: Decimal | None = None
     land_value: Decimal | None = None
     appreciation: Decimal | None = None

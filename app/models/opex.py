@@ -24,7 +24,7 @@ class OpexByBedrooms(Base):
     supplies: Mapped[Decimal | None] = mapped_column(Numeric)
     capex_reserve: Mapped[Decimal | None] = mapped_column(Numeric)
     cleaning_fee: Mapped[Decimal | None] = mapped_column(Numeric)
-    num_of_turns: Mapped[int | None] = mapped_column(Integer)
+    num_of_turns: Mapped[Decimal | None] = mapped_column(Numeric)
     property_taxes: Mapped[Decimal | None] = mapped_column(Numeric)
     land_value: Mapped[Decimal | None] = mapped_column(Numeric)
     appreciation: Mapped[Decimal | None] = mapped_column(Numeric)

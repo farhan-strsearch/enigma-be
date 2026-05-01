@@ -60,7 +60,7 @@ def load_rows():
                     "capex_reserve": _currency(row["CapEx Reserve"]),
                     "cleaning_fee": _currency(row["Cleaning Fee"]),
                     "num_of_turns": (
-                        round(float(row["# of Turns"]))
+                        Decimal(row["# of Turns"].strip())
                         if row["# of Turns"].strip()
                         else None
                     ),
