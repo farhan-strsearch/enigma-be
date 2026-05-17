@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_config
 from app.external_api.router import router as external_api_router
+from app.iron_bank.router import router as iron_bank_router
 from app.markets.router import router as markets_router
 from app.middleware.auth import AuthMiddleware
 
@@ -24,6 +25,7 @@ def create_app() -> FastAPI:
     application.add_middleware(AuthMiddleware)
 
     application.include_router(markets_router)
+    application.include_router(iron_bank_router)
     application.include_router(external_api_router)
 
     return application
